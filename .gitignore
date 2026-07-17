@@ -1,0 +1,7 @@
+/mc-healthcheck
+/mc-healthcheck.exe
+/dist/
+*.tar.gz
+*.swp
+.DS_Store
+node_modules/
