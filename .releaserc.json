@@ -25,7 +25,7 @@
     [
       "@semantic-release/exec",
       {
-        "analyzeCommitsCmd": "echo $RELEASE_TYPE"
+        "analyzeCommitsCmd": "echo \"$RELEASE_TYPE\""
       }
     ],
     [

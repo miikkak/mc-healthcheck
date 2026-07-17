@@ -21,6 +21,7 @@ const maxResponseLength = 1 << 20 // guards against a misbehaving peer claiming 
 // unless a well-formed JSON status response is received within timeout.
 func Status(host string, port int, timeout time.Duration) error {
 	addr := net.JoinHostPort(host, strconv.Itoa(port))
+	deadline := time.Now().Add(timeout)
 
 	conn, err := net.DialTimeout("tcp", addr, timeout)
 	if err != nil {
@@ -28,7 +29,7 @@ func Status(host string, port int, timeout time.Duration) error {
 	}
 	defer func() { _ = conn.Close() }()
 
-	if err := conn.SetDeadline(time.Now().Add(timeout)); err != nil {
+	if err := conn.SetDeadline(deadline); err != nil {
 		return fmt.Errorf("set deadline: %w", err)
 	}
 
