@@ -58,6 +58,9 @@ func Status(host string, port int, timeout time.Duration) error {
 	if err != nil {
 		return fmt.Errorf("read json length: %w", err)
 	}
+	if jsonLen < 0 || jsonLen > int32(br.Len()) {
+		return fmt.Errorf("invalid json length: %d", jsonLen)
+	}
 	jsonBytes := make([]byte, jsonLen)
 	if _, err := io.ReadFull(br, jsonBytes); err != nil {
 		return fmt.Errorf("read json body: %w", err)

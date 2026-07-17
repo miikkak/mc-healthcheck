@@ -89,6 +89,19 @@ func TestStatus_WrongPacketID(t *testing.T) {
 	}
 }
 
+func TestStatus_OversizedJSONLength(t *testing.T) {
+	packet := append(varInt(0x00), varInt(1<<20)...) // claims a 1 MiB string, no body follows
+	var full []byte
+	full = append(full, varInt(int32(len(packet)))...)
+	full = append(full, packet...)
+
+	host, port := fakeServer(t, full)
+
+	if err := Status(host, port, time.Second); err == nil {
+		t.Fatal("Status() = nil, want error for oversized json length")
+	}
+}
+
 func TestStatus_ConnectionRefused(t *testing.T) {
 	ln, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
