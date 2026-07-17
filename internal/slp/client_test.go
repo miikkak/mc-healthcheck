@@ -26,7 +26,7 @@ func fakeServer(t *testing.T, response []byte) (host string, port int) {
 		if err != nil {
 			return
 		}
-		defer conn.Close()
+		defer func() { _ = conn.Close() }()
 
 		r := bufio.NewReader(conn)
 		if _, err := readPacket(r); err != nil { // handshake

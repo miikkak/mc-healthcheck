@@ -26,7 +26,7 @@ func Status(host string, port int, timeout time.Duration) error {
 	if err != nil {
 		return fmt.Errorf("dial %s: %w", addr, err)
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	if err := conn.SetDeadline(time.Now().Add(timeout)); err != nil {
 		return fmt.Errorf("set deadline: %w", err)
