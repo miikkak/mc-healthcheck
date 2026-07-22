@@ -68,6 +68,33 @@ func TestStatus_ValidResponse(t *testing.T) {
 	}
 }
 
+func TestQuery_ValidResponse(t *testing.T) {
+	host, port := fakeServer(t, validStatusResponse(`{"players":{"online":3,"max":20}}`))
+
+	payload, err := Query(host, port, time.Second)
+	if err != nil {
+		t.Fatalf("Query() = %v, want nil", err)
+	}
+	players, ok := payload["players"].(map[string]any)
+	if !ok {
+		t.Fatalf("payload[\"players\"] = %v, want map[string]any", payload["players"])
+	}
+	if online, want := players["online"], float64(3); online != want {
+		t.Fatalf("players.online = %v, want %v", online, want)
+	}
+	if max, want := players["max"], float64(20); max != want {
+		t.Fatalf("players.max = %v, want %v", max, want)
+	}
+}
+
+func TestQuery_MalformedJSON(t *testing.T) {
+	host, port := fakeServer(t, validStatusResponse(`not json`))
+
+	if _, err := Query(host, port, time.Second); err == nil {
+		t.Fatal("Query() = nil, want error for malformed JSON")
+	}
+}
+
 func TestStatus_MalformedJSON(t *testing.T) {
 	host, port := fakeServer(t, validStatusResponse(`not json`))
 
