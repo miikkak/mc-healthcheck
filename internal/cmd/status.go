@@ -48,6 +48,6 @@ func init() {
 	statusCmd.Flags().String("host", "localhost", "server hostname")
 	statusCmd.Flags().Int("port", 25565, "server port")
 	statusCmd.Flags().Duration("timeout", 5*time.Second, "connection and read timeout")
-	statusCmd.Flags().Bool("json", false, "print the raw status response JSON to stdout on success")
+	statusCmd.Flags().Bool("json", false, "print the decoded status response as JSON to stdout on success")
 	RootCmd.AddCommand(statusCmd)
 }
