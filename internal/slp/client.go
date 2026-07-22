@@ -20,58 +20,65 @@ const maxResponseLength = 1 << 20 // guards against a misbehaving peer claiming 
 // Status performs a Server List Ping against host:port and returns an error
 // unless a well-formed JSON status response is received within timeout.
 func Status(host string, port int, timeout time.Duration) error {
+	_, err := Query(host, port, timeout)
+	return err
+}
+
+// Query performs a Server List Ping against host:port and returns the
+// decoded status response (version, players, MOTD, etc.) within timeout.
+func Query(host string, port int, timeout time.Duration) (map[string]any, error) {
 	addr := net.JoinHostPort(host, strconv.Itoa(port))
 	deadline := time.Now().Add(timeout)
 
 	conn, err := net.DialTimeout("tcp", addr, timeout)
 	if err != nil {
-		return fmt.Errorf("dial %s: %w", addr, err)
+		return nil, fmt.Errorf("dial %s: %w", addr, err)
 	}
 	defer func() { _ = conn.Close() }()
 
 	if err := conn.SetDeadline(deadline); err != nil {
-		return fmt.Errorf("set deadline: %w", err)
+		return nil, fmt.Errorf("set deadline: %w", err)
 	}
 
 	if err := writeHandshake(conn, host, port); err != nil {
-		return fmt.Errorf("write handshake: %w", err)
+		return nil, fmt.Errorf("write handshake: %w", err)
 	}
 	if err := writePacket(conn, varInt(0x00)); err != nil { // empty status-request packet
-		return fmt.Errorf("write status request: %w", err)
+		return nil, fmt.Errorf("write status request: %w", err)
 	}
 
 	body, err := readPacket(bufio.NewReader(conn))
 	if err != nil {
-		return fmt.Errorf("read status response: %w", err)
+		return nil, fmt.Errorf("read status response: %w", err)
 	}
 
 	br := bytes.NewReader(body)
 	packetID, err := readVarInt(br)
 	if err != nil {
-		return fmt.Errorf("read response packet id: %w", err)
+		return nil, fmt.Errorf("read response packet id: %w", err)
 	}
 	if packetID != 0x00 {
-		return fmt.Errorf("unexpected response packet id: %d", packetID)
+		return nil, fmt.Errorf("unexpected response packet id: %d", packetID)
 	}
 
 	jsonLen, err := readVarInt(br)
 	if err != nil {
-		return fmt.Errorf("read json length: %w", err)
+		return nil, fmt.Errorf("read json length: %w", err)
 	}
 	if jsonLen < 0 || jsonLen > int32(br.Len()) {
-		return fmt.Errorf("invalid json length: %d", jsonLen)
+		return nil, fmt.Errorf("invalid json length: %d", jsonLen)
 	}
 	jsonBytes := make([]byte, jsonLen)
 	if _, err := io.ReadFull(br, jsonBytes); err != nil {
-		return fmt.Errorf("read json body: %w", err)
+		return nil, fmt.Errorf("read json body: %w", err)
 	}
 
 	var payload map[string]any
 	if err := json.Unmarshal(jsonBytes, &payload); err != nil {
-		return fmt.Errorf("invalid status json: %w", err)
+		return nil, fmt.Errorf("invalid status json: %w", err)
 	}
 
-	return nil
+	return payload, nil
 }
 
 func writeHandshake(w io.Writer, host string, port int) error {

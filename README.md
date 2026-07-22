@@ -26,11 +26,20 @@ Performs a Java Edition Server List Ping (handshake + status request) over
 TCP and confirms the response is well-formed JSON. Works against both Paper
 servers and Velocity proxies, since both respond to the vanilla SLP protocol.
 
-| Flag        | Default     | Description                 |
-| ----------- | ----------- | --------------------------- |
-| `--host`    | `localhost` | Server hostname             |
-| `--port`    | `25565`     | Server port                 |
-| `--timeout` | `5s`        | Connection and read timeout |
+With `--json`, prints the decoded status response (player count, MOTD,
+version, etc.) to stdout on success instead of staying silent:
+
+```shell
+mc-healthcheck status --host localhost --port 25565 --json
+# {"players":{"max":20,"online":3,...},"version":{"name":"1.21",...},...}
+```
+
+| Flag        | Default     | Description                                  |
+| ----------- | ----------- | -------------------------------------------- |
+| `--host`    | `localhost` | Server hostname                              |
+| `--port`    | `25565`     | Server port                                  |
+| `--timeout` | `5s`        | Connection and read timeout                  |
+| `--json`    | `false`     | Print the raw status response JSON to stdout |
 
 ### `status-bedrock`
 
