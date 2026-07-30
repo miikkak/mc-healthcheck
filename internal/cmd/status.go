@@ -22,6 +22,10 @@ mc-healthcheck status --host localhost --port 25565 --json
 		timeout, _ := cmd.Flags().GetDuration("timeout")
 		printJSON, _ := cmd.Flags().GetBool("json")
 
+		if timeout <= 0 {
+			return fmt.Errorf("timeout must be positive, got %s", timeout)
+		}
+
 		if !printJSON {
 			if err := slp.Status(host, port, timeout); err != nil {
 				return fmt.Errorf("status check failed: %w", err)

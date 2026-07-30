@@ -21,6 +21,10 @@ mc-healthcheck status-bedrock --host localhost --port 19132 --timeout 5s
 		port, _ := cmd.Flags().GetInt("port")
 		timeout, _ := cmd.Flags().GetDuration("timeout")
 
+		if timeout <= 0 {
+			return fmt.Errorf("timeout must be positive, got %s", timeout)
+		}
+
 		addr := net.JoinHostPort(host, strconv.Itoa(port))
 		response, err := raknet.PingTimeout(addr, timeout)
 		if err != nil {
