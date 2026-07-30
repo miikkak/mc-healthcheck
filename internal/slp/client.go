@@ -72,6 +72,9 @@ func Query(host string, port int, timeout time.Duration) (map[string]any, error)
 	if _, err := io.ReadFull(br, jsonBytes); err != nil {
 		return nil, fmt.Errorf("read json body: %w", err)
 	}
+	if br.Len() != 0 {
+		return nil, fmt.Errorf("unexpected trailing data after json body: %d bytes", br.Len())
+	}
 
 	var payload map[string]any
 	if err := json.Unmarshal(jsonBytes, &payload); err != nil {
