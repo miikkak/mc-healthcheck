@@ -49,9 +49,12 @@ jobs:
 
       - name: Determine version
         id: version
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_TAG: ${{ inputs.tag }}
         run: |
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            echo "tag=${{ inputs.tag }}" >> "$GITHUB_OUTPUT"
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            echo "tag=$INPUT_TAG" >> "$GITHUB_OUTPUT"
           else
             echo "tag=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
           fi
@@ -60,20 +63,24 @@ jobs:
         run: go test ./... -race
 
       - name: Build binaries (linux/amd64, linux/arm64)
+        env:
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
         run: |
           for arch in amd64 arm64; do
             CGO_ENABLED=0 GOOS=linux GOARCH="${arch}" \
               go build \
-                -ldflags="-s -w -X main.version=${{ steps.version.outputs.tag }}" \
+                -ldflags="-s -w -X main.version=${RELEASE_TAG}" \
                 -o "mc-healthcheck-linux-${arch}" \
                 ./cmd/mc-healthcheck/
           done
 
       - name: Create release archives
+        env:
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
         run: |
           for arch in amd64 arm64; do
             cp "mc-healthcheck-linux-${arch}" mc-healthcheck
-            tar czf "mc-healthcheck_${{ steps.version.outputs.tag }}_linux_${arch}.tar.gz" \
+            tar czf "mc-healthcheck_${RELEASE_TAG}_linux_${arch}.tar.gz" \
               mc-healthcheck \
               README.md
             rm mc-healthcheck
