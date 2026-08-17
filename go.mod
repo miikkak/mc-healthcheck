@@ -1,6 +1,6 @@
 module github.com/miikkak/mc-healthcheck
 
-go 1.26.5
+go 1.26.6
 
 require (
 	github.com/sandertv/go-raknet v1.15.1
