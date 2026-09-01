@@ -80,6 +80,9 @@ func Query(host string, port int, timeout time.Duration) (map[string]any, error)
 	if err := json.Unmarshal(jsonBytes, &payload); err != nil {
 		return nil, fmt.Errorf("invalid status json: %w", err)
 	}
+	if payload == nil {
+		return nil, fmt.Errorf("status json is not an object: %s", jsonBytes)
+	}
 
 	return payload, nil
 }
@@ -158,6 +161,9 @@ func readVarInt(r byteReader) (int32, error) {
 		if err != nil {
 			return 0, err
 		}
+		// A 5th byte (shift == 28) contributes its low nibble as the top 4
+		// bits of the int32; any higher bits (including the continuation
+		// bit, 0x80) can't be represented and mean the value overflows.
 		if shift == 28 && b&0xF0 != 0 {
 			return 0, fmt.Errorf("varint overflows int32")
 		}
@@ -166,9 +172,6 @@ func readVarInt(r byteReader) (int32, error) {
 			break
 		}
 		shift += 7
-		if shift >= 35 {
-			return 0, fmt.Errorf("varint too long")
-		}
 	}
 	return result, nil
 }

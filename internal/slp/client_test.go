@@ -103,6 +103,14 @@ func TestStatus_MalformedJSON(t *testing.T) {
 	}
 }
 
+func TestQuery_NullPayload(t *testing.T) {
+	host, port := fakeServer(t, validStatusResponse(`null`))
+
+	if _, err := Query(host, port, time.Second); err == nil {
+		t.Fatal("Query() = nil, want error for null status json")
+	}
+}
+
 func TestStatus_WrongPacketID(t *testing.T) {
 	packet := append(varInt(0x01), packString(`{}`)...)
 	var full []byte

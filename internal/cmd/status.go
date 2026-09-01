@@ -16,11 +16,16 @@ var statusCmd = &cobra.Command{
 mc-healthcheck status --host localhost --port 25565 --timeout 5s
 mc-healthcheck status --host localhost --port 25565 --json
 `,
+	Args: cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, _ []string) error {
 		host, _ := cmd.Flags().GetString("host")
 		port, _ := cmd.Flags().GetInt("port")
 		timeout, _ := cmd.Flags().GetDuration("timeout")
 		printJSON, _ := cmd.Flags().GetBool("json")
+
+		if port < 1 || port > 65535 {
+			return fmt.Errorf("port must be between 1 and 65535, got %d", port)
+		}
 
 		if timeout <= 0 {
 			return fmt.Errorf("timeout must be positive, got %s", timeout)

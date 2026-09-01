@@ -16,10 +16,15 @@ var statusBedrockCmd = &cobra.Command{
 	Example: `
 mc-healthcheck status-bedrock --host localhost --port 19132 --timeout 5s
 `,
+	Args: cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, _ []string) error {
 		host, _ := cmd.Flags().GetString("host")
 		port, _ := cmd.Flags().GetInt("port")
 		timeout, _ := cmd.Flags().GetDuration("timeout")
+
+		if port < 1 || port > 65535 {
+			return fmt.Errorf("port must be between 1 and 65535, got %d", port)
+		}
 
 		if timeout <= 0 {
 			return fmt.Errorf("timeout must be positive, got %s", timeout)
