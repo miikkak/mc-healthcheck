@@ -158,6 +158,9 @@ func readVarInt(r byteReader) (int32, error) {
 		if err != nil {
 			return 0, err
 		}
+		if shift == 28 && b&0xF0 != 0 {
+			return 0, fmt.Errorf("varint overflows int32")
+		}
 		result |= int32(b&0x7F) << shift
 		if b&0x80 == 0 {
 			break
