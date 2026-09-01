@@ -2,7 +2,11 @@
 // status-bedrock, each a thin wrapper around a protocol client.
 package cmd
 
-import "github.com/spf13/cobra"
+import (
+	"fmt"
+
+	"github.com/spf13/cobra"
+)
 
 // RootCmd represents the base command when called without any subcommands.
 var RootCmd = &cobra.Command{
@@ -19,6 +23,13 @@ Each exits 0 on a well-formed response within the timeout, non-zero otherwise.
 `,
 	SilenceUsage:  true,
 	SilenceErrors: true,
+	// Invoking mc-healthcheck with no subcommand must not exit 0: a
+	// container HEALTHCHECK that forgets to specify status/status-bedrock
+	// should fail loudly rather than pass by accident.
+	RunE: func(cmd *cobra.Command, _ []string) error {
+		_ = cmd.Help()
+		return fmt.Errorf("no subcommand specified")
+	},
 }
 
 // Execute adds all child commands to the root command and executes it. This
