@@ -12,5 +12,5 @@ permissions:
 
 jobs:
   security:
-    uses: miikkak/workflows/.github/workflows/security-scan.yml@22970d63aae314bce4ed6a6c917c36dba37297d5 # main
+    uses: miikkak/workflows/.github/workflows/security-scan.yml@7690843864f3855fd1204cf4f08c2510d9f50575 # main
     secrets: inherit
