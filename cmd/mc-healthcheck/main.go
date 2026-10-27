@@ -1,6 +1,6 @@
 // Command mc-healthcheck checks whether a Minecraft server is responding, for
 // use in container health checks. It supports Java Edition (Server List Ping
-// over TCP) and Bedrock Edition (RakNet unconnected ping over UDP).
+// over TCP) and Bedrock Edition (NetherNet signaling over TCP, RakNet unconnected ping over UDP).
 package main
 
 import (

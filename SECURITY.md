@@ -36,7 +36,7 @@ Please follow these steps if you discover a security vulnerability in this proje
 ## Scope
 
 This connects outbound to a host/port you specify and parses whatever response comes back (a
-Java Edition Server List Ping response, or a Bedrock RakNet unconnected-pong) as untrusted input
+Java Edition Server List Ping response, or a Bedrock NetherNet signaling document or RakNet unconnected-pong) as untrusted input
 
 - it doesn't listen on any network port itself, doesn't execute anything derived from the
   response, and its only output is a pass/fail exit code plus, optionally, the parsed status as

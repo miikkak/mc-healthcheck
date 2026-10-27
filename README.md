@@ -52,14 +52,21 @@ mc-healthcheck status --host localhost --port 25565 --json
 
 ### `status-bedrock`
 
-Performs a RakNet unconnected ping over UDP, for a Bedrock listener (e.g. a
-Geyser plugin bridging Bedrock clients into a Velocity proxy).
+Checks a Bedrock listener (e.g. a Geyser plugin bridging Bedrock clients into
+a Velocity proxy). Bedrock 26.60+ clients speak only NetherNet, so the default
+`--transport auto` first checks NetherNet signaling (`GET /v1/join` on the TCP
+port, expecting HTTP 200 and a JSON object with `protocol`) and falls back to a
+RakNet unconnected ping over UDP, printing a warning to stderr if only the
+fallback succeeded. The NetherNet check covers the signaling endpoint only,
+not the UDP gameplay leg. Signaling is plain HTTP unless `--tls` is set.
 
-| Flag        | Default     | Description     |
-| ----------- | ----------- | --------------- |
-| `--host`    | `localhost` | Server hostname |
-| `--port`    | `19132`     | Server port     |
-| `--timeout` | `5s`        | Read timeout    |
+| Flag          | Default     | Description                                                    |
+| ------------- | ----------- | -------------------------------------------------------------- |
+| `--host`      | `localhost` | Server hostname                                                |
+| `--port`      | `19132`     | Server port (TCP for NetherNet signaling, UDP for RakNet)      |
+| `--timeout`   | `5s`        | Connection and read timeout                                    |
+| `--transport` | `auto`      | `auto` (NetherNet, then RakNet), `nethernet` or `raknet`       |
+| `--tls`       | `false`     | Use https for the NetherNet signaling request                  |
 
 ## Building
 
