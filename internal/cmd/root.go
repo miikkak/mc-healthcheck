@@ -17,7 +17,7 @@ mc-healthcheck checks whether a Minecraft server is responding, for use in
 container health checks. It has exactly two subcommands:
 
   status          Java Edition Server List Ping (TCP)
-  status-bedrock  Bedrock Edition RakNet unconnected ping (UDP)
+  status-bedrock  Bedrock Edition NetherNet signaling (TCP) / RakNet ping (UDP)
 
 Each exits 0 on a well-formed response within the timeout, non-zero otherwise.
 `,

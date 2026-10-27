@@ -58,3 +58,13 @@ func TestStatusBedrock_RejectsInvalidPort(t *testing.T) {
 		t.Fatalf("Execute() error = %q, want it to contain %q", err, want)
 	}
 }
+
+func TestStatusBedrock_RejectsInvalidTransport(t *testing.T) {
+	err := execute("status-bedrock", "--port", "19132", "--transport", "quic")
+	if err == nil {
+		t.Fatal("Execute() = nil, want error for unknown transport")
+	}
+	if want := "transport must be"; !strings.Contains(err.Error(), want) {
+		t.Fatalf("Execute() error = %q, want it to contain %q", err, want)
+	}
+}
