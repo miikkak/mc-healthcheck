@@ -4,7 +4,9 @@
 package nethernet
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -26,11 +28,23 @@ func Status(host string, port int, timeout time.Duration, useTLS bool) error {
 	}
 	u := url.URL{Scheme: scheme, Host: net.JoinHostPort(host, strconv.Itoa(port)), Path: "/v1/join"}
 
-	client := &http.Client{
-		Timeout:   timeout,
-		Transport: &http.Transport{DisableKeepAlives: true},
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+	if err != nil {
+		return fmt.Errorf("get %s: %w", u.String(), err)
 	}
-	resp, err := client.Get(u.String())
+
+	// Redirects are not followed: a 3xx from the configured endpoint must
+	// not let another server's 200 pass for this listener.
+	client := &http.Client{
+		Transport: &http.Transport{DisableKeepAlives: true},
+		CheckRedirect: func(*http.Request, []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
+	resp, err := client.Do(req)
 	if err != nil {
 		return fmt.Errorf("get %s: %w", u.String(), err)
 	}
@@ -43,8 +57,13 @@ func Status(host string, port int, timeout time.Duration, useTLS bool) error {
 	var status struct {
 		Protocol *int `json:"protocol"`
 	}
-	if err := json.NewDecoder(io.LimitReader(resp.Body, maxResponseLength)).Decode(&status); err != nil {
+	dec := json.NewDecoder(io.LimitReader(resp.Body, maxResponseLength))
+	if err := dec.Decode(&status); err != nil {
 		return fmt.Errorf("get %s: malformed response: %w", u.String(), err)
+	}
+	// Exactly one JSON document: anything but trailing whitespace is malformed.
+	if err := dec.Decode(&json.RawMessage{}); !errors.Is(err, io.EOF) {
+		return fmt.Errorf("get %s: malformed response: trailing data after JSON document", u.String())
 	}
 	if status.Protocol == nil {
 		return fmt.Errorf("get %s: response has no protocol field", u.String())

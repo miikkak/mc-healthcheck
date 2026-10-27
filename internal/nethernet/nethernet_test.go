@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strconv"
+	"sync"
 	"testing"
 	"time"
 )
@@ -36,6 +37,15 @@ func TestStatus(t *testing.T) {
 		{"missing protocol", func(w http.ResponseWriter, _ *http.Request) {
 			_, _ = w.Write([]byte(`{"version":"26.60"}`))
 		}, true},
+		{"trailing data", func(w http.ResponseWriter, _ *http.Request) {
+			_, _ = w.Write([]byte(`{"protocol":2225}not-json`))
+		}, true},
+		{"trailing whitespace", func(w http.ResponseWriter, _ *http.Request) {
+			_, _ = w.Write([]byte("{\"protocol\":2225}\n"))
+		}, false},
+		{"redirect to a healthy server", func(w http.ResponseWriter, r *http.Request) {
+			http.Redirect(w, r, "/ok", http.StatusFound)
+		}, true},
 		{"html", func(w http.ResponseWriter, _ *http.Request) {
 			_, _ = w.Write([]byte(`<html></html>`))
 		}, true},
@@ -45,15 +55,26 @@ func TestStatus(t *testing.T) {
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			var path string
+			var (
+				mu   sync.Mutex
+				path string
+			)
 			host, port := serve(t, func(w http.ResponseWriter, r *http.Request) {
+				if r.URL.Path == "/ok" {
+					_, _ = w.Write([]byte(`{"protocol":1}`))
+					return
+				}
+				mu.Lock()
 				path = r.URL.Path
+				mu.Unlock()
 				tc.handler(w, r)
 			})
 			err := Status(host, port, 2*time.Second, false)
 			if (err != nil) != tc.wantErr {
 				t.Fatalf("Status() error = %v, wantErr %v", err, tc.wantErr)
 			}
+			mu.Lock()
+			defer mu.Unlock()
 			if path != "/v1/join" {
 				t.Errorf("path = %q, want /v1/join", path)
 			}
